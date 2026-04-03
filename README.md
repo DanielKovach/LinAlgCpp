@@ -1,2 +1,2 @@
 # LinAlgCpp
-Implementation of linear algebra library in C++
+Implementation of a linear algebra library in C++
