@@ -2,19 +2,20 @@
 #include <vector>
 #include <stdexcept>
 
+using namespace std;
+
 
 // HELPERS
-
 
 class Tens {
   
   
   public:
-    std::vector<int> data;
-    std::vector<size_t> shape;
+    vector<int> data;
+    vector<size_t> shape;
 
 
-  Tens(std::vector<int> d, std::vector<size_t> s) : data(d), shape(s) {
+  Tens(vector<int> d, vector<size_t> s) : data(d), shape(s) {
         
         size_t _cumprod = 1;
         for (int i = 0; i  < s.size(); i++){
@@ -22,43 +23,78 @@ class Tens {
             _cumprod *= s[i];  
             
             if (s[i] < 1) {
-              throw std::invalid_argument("Shape members must be greater than 0.\n");
+              throw invalid_argument("Shape members must be greater than 0.\n");
             }
 
             if ((d.size() % s[i]) != 0) {
-              throw std::invalid_argument("Shape members must divide d.size()");
+              throw invalid_argument("Shape members must divide d.size()");
             }
             
-        }
+          }
 
         if (d.size() != _cumprod && d.size() > 0) {
-            throw std::invalid_argument("Product of shape members must equal d.size()");
+            throw invalid_argument("Product of shape members must equal d.size()");
           }
     }
 
   Tens operator+(const Tens &b) {
+    /*
+
+    Component-wise Addition
+    
+    */
 
 
-  if (data.size() != b.data.size()) {
-    const std::string what_arg = "\'" + std::string(__func__) + "\' args a and b to must be the same size."; 
-    throw std::runtime_error(what_arg);
+    if (data.size() != b.data.size()) {
+      const string what_arg = "\'" + string(__func__) + "\' args a and b to must be the same size."; 
+      throw runtime_error(what_arg);
+    }
+    
+    vector<int> v(b.data.size());
+    
+    for (int i = 0; i < b.data.size(); i ++) {
+      v[i] = data[i] + b.data[i];
+    }
+    
+    return Tens(v, b.shape);
   }
+
+  Tens operator*(const Tens &b) {
+  /*
+
+  If args a and b are respectively nxm and mxp matrices, then this returns the nxp matrix using the naive algorithm.
   
-  std::vector<int> v(b.data.size());
+  */
   
-  for (int i = 0; i < b.data.size(); i ++) {
-    v[i] = data[i] + b.data[i];
+  size_t m = shape[1];
+  if (m != b.shape[0]) {
+    const string what_arg = "\'" + string(__func__) + "\': Tensors must have compatible shapes for multiplication.";
+    throw runtime_error(what_arg);
+    }
+
+  size_t n = shape[0];
+  size_t p = b.shape[1];
+  
+  vector<int> ans(n*p);
+  
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {  
+      int tmp = data[i*m + j];        
+      for (int k = 0; k < p; k++) {
+        ans[i*p + k] += tmp*b.data[j*p + k];
+      } 
+    }
   }
-  
-  return Tens(v, b.shape);
+  vector<size_t> ans_shp = {n, p};
+  return Tens(ans, ans_shp);
 }
 
-
-
-  friend std::ostream& operator<<(std::ostream& os, Tens t) 
+  friend ostream& operator<<(ostream& os, Tens t) 
   {   
-      
-      std::string s = "[[ ";
+      // TODO: 
+      //  -Generalize to more than 2D
+      //  -Line up each column
+      string s = "[[ ";
 
       for (int i = 0; i < (t.data.size() - 1); i++) {
 
@@ -66,7 +102,7 @@ class Tens {
           
           s += " ";     
         }
-        s += std::to_string(t.data[i]) + " ";
+        s += to_string(t.data[i]) + " ";
         
         if ((i+1) % t.shape[1] == 0) {
           
@@ -80,7 +116,7 @@ class Tens {
       if (last > 0) {
         s += " ";
         }
-      s += std::to_string(last) + " ]]\n\n";
+      s += to_string(last) + " ]]\n\n";
       os << s;
 
       return os;
@@ -94,33 +130,29 @@ class Tens {
 
 // LINEAR ALGEBRA
 
-
-
-std::vector<int> hProd(const std::vector<int> &a, const std::vector<int> &b) {
-
+Tens hprod(const Tens &a, const Tens &b) {
     /*
 
     Haddamard product - Component-wise mult
     
     */
 
-  if (a.size() != b.size()) {
-    const std::string what_arg = "\'" + std::string(__func__) + "\' args a and b to must be the same size.";
+    if (a.shape != b.shape) {
+      const string what_arg = "\'" + string(__func__) + "\' args a and b to must be the same shape.";
+      
+      throw runtime_error(what_arg);
+    }
     
-    throw std::runtime_error(what_arg);
-  }
-  
-  std::vector<int> ans(a.size());
-  
-  for (int i = 0; i < a.size(); i ++) {
-    ans[i] = a[i]*b[i];
-  }
-  
-  return ans;
+    vector<int> v(a.data.size());
+    
+    for (int i = 0; i < a.data.size(); i ++) {
+      v[i] = a.data[i]*b.data[i];
+    }
+    
+    return Tens(v, b.shape);
 }
 
-
-int vDot(const std::vector<int> &a, const std::vector<int> &b) {
+int vDot(const vector<int> &a, const vector<int> &b) {
 
   /*
 
@@ -129,9 +161,9 @@ int vDot(const std::vector<int> &a, const std::vector<int> &b) {
   */
 
     if (a.size() != b.size()) {
-      const std::string what_arg = "\'" + std::string(__func__) + "\' args a and b to must be the same size.";
+      const string what_arg = "\'" + string(__func__) + "\' args a and b to must be the same size.";
       
-      throw std::runtime_error(what_arg);
+      throw runtime_error(what_arg);
     }
     
     int ans = 0;
@@ -143,81 +175,64 @@ int vDot(const std::vector<int> &a, const std::vector<int> &b) {
     return ans;
 }
 
-
-
-
-std::vector<int> mMul(const std::vector<int> &a, const std::vector<int> &b, const int &m) {
+Tens mMul(const Tens &a, const Tens &b) {
 
   /*
 
   If args a and b are respectively nxm and mxp matrices, then this returns the nxp matrix using the naive algorithm.
   
   */
-
-  if (m < 1) {
-    const std::string what_arg = "\'" + std::string(__func__) + "\' int arg m must be the greater than 0.";
-    throw std::runtime_error(what_arg);
-    }
-  if ((a.size() % m) != 0) {
-    const std::string what_arg = "\'" + std::string(__func__) + "\' int arg m must divide the length of \'a\'.";
-    throw std::runtime_error(what_arg);
-    }
-  if ((b.size() % m) != 0) {
-    const std::string what_arg = "\'" + std::string(__func__) + "\' int arg m must divide the length of \'b\'.";
-    throw std::runtime_error(what_arg);
-    }
-
-  int n = a.size()/m;
-  int p = b.size()/m;
   
-  std::vector<int> ans(n*p);
+  size_t m = a.shape[1];
+  if (m != b.shape[0]) {
+    const string what_arg = "\'" + string(__func__) + "\': Tensors must have compatible shapes for multiplication.";
+    throw runtime_error(what_arg);
+    }
+
+  size_t n = a.shape[0];
+  size_t p = b.shape[1];
+  
+  vector<int> ans(n*p);
   
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < m; j++) {  
-      int tmp = a[i*m + j];        
+      int tmp = a.data[i*m + j];        
       for (int k = 0; k < p; k++) {
-        ans[i*p + k] += tmp*b[j*p + k];
+        ans[i*p + k] += tmp*b.data[j*p + k];
       } 
     }
   }
-    
-    return ans;
+  vector<size_t> ans_shp = {n, p};
+  return Tens(ans, ans_shp);
 }
 
-std::vector<int> tpose(const std::vector<int> &a, const int &m) {
+Tens transpose(const Tens &a) {
 
   /*
 
-  If arg a is an nxm matrix, then this returns the mxn transpose of a, optionally inplace
+  If arg a is an nxm matrix, then this returns the mxn transpose of a
+
+  TODO: Make this optionally inplace
   
   */
 
-  if (m < 1) {
-    const std::string what_arg = "\'" + std::string(__func__) + "\' int arg m must be the greater than 0.";
-    throw std::runtime_error(what_arg);
-    }
-  if ((a.size() % m) != 0) {
-    const std::string what_arg = "\'" + std::string(__func__) + "\' int arg m must divide the length of \'a\'.";
-    throw std::runtime_error(what_arg);
-    }
-
-
-  int n = a.size()/m;
+  size_t n = a.shape[0];
+  size_t m = a.data.size()/a.shape[0];
   
-  
-  std::vector<int> ans(a.size());
+  vector<int> ans(a.data.size());
   
   for (int j = 0; j < m; j++) {
     for (int i = 0; i < n; i++) {  
-      ans[j*n + i] = a[i*m + j];        
+      ans[j*n + i] = a.data[i*m + j];        
     }
   }
-    
-    return ans;
+  vector<size_t> ans_shp = {m, n};
+  
+  return Tens(ans, ans_shp);
 }
 
 
-int trace(const std::vector<int> &a, const int &numCols) {
+int trace(const Tens &a) {
 
   /*
 
@@ -226,13 +241,13 @@ int trace(const std::vector<int> &a, const int &numCols) {
   */
 
   int ans = 0;
-  int n = a.size()/numCols;
-  int min = std::min(n, numCols);
   
-  int tmp = numCols + 1;
+  int minn = min(a.shape[0], a.shape[1]);
+  
+  int tmp = a.shape[1] + 1;
 
-  for (int i = 0; i < min; i ++) {
-    ans += a[tmp*i];
+  for (int i = 0; i < minn; i ++) {
+    ans += a.data[tmp*i];
   }
   
   return ans;
@@ -289,36 +304,36 @@ Later:
 
 int main() {
 
-  std::vector<int> inp1 = {-1, 2, 3, -4, 10, 10,-4, 10, 10};
-  std::vector<int> inp2 = {-1, -2, -3, 4, 5, 6,-4, 10, 10};
+  vector<int> inp1 = {-1, 2, 3, -4, 10, 10,-4, 10, 10};
+  vector<int> inp2 = {-1, -2, -3, 4, 5, 6,-4, 10, 10};
   
   // Num Cols in inp1 or num rows in inp2
   size_t m = 3;
   size_t n = inp1.size()/m;
-  std::vector<size_t> s = {n,m};  
+  vector<size_t> s = {n,m};  
   Tens mat1 = Tens(inp1, s);
   
   size_t p = inp2.size()/m;
-  std::vector<size_t> s2 = {m,p};  
+  vector<size_t> s2 = {m,p};  
   Tens mat2 = Tens(inp2, s2);
 
 
-  std::cout << mat1;
-  std::cout << mat2;
-  std::cout << mat2 + mat1;
+  cout << mat1;
+  cout << mat2;
+  cout << mat2 + mat1;
 
-  //std::cout << std::to_string(inp1);
+  //cout << to_string(inp1);
   //Tens sm = mat1 + mat2;
-  //std::vector<int> ans = mMul(inp1, inp2, m);
+  //vector<int> ans = mMul(inp1, inp2, m);
   
   //int m2 = inp2.size()/m;
 
-  //std::cout <<  "Transpose: " << "\n";
-  //std::vector<int> ansT = tpose(ans, m2);
+  //cout <<  "Transpose: " << "\n";
+  //vector<int> ansT = tpose(ans, m2);
 
   //printMat(ansT, m);
   //printMat(ansT, m, true);
-  //std::cout << trace(ans, m2) << "\n";
+  //cout << trace(ans, m2) << "\n";
 
 
   return 0;
