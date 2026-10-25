@@ -89,7 +89,7 @@ class Tens {
   return Tens(ans, ans_shp);
 }
 
-  friend ostream& operator<<(ostream& os, Tens t) 
+  friend ostream& operator << (ostream& os, Tens t) 
   {   
       // TODO: 
       //  -Generalize to more than 2D
@@ -304,8 +304,8 @@ Later:
 
 int main() {
 
-  vector<int> inp1 = {-1, 2, 3, -4, 10, 10,-4, 10, 10};
-  vector<int> inp2 = {-1, -2, -3, 4, 5, 6,-4, 10, 10};
+  vector<int> inp1 = {-1, 2, 3, -4, 10, 10, -4, 10, 10};
+  vector<int> inp2 = {-1, -2, -3, 4, 5, 6, -4, 10, 10};
   
   // Num Cols in inp1 or num rows in inp2
   size_t m = 3;
@@ -321,20 +321,6 @@ int main() {
   cout << mat1;
   cout << mat2;
   cout << mat2 + mat1;
-
-  //cout << to_string(inp1);
-  //Tens sm = mat1 + mat2;
-  //vector<int> ans = mMul(inp1, inp2, m);
-  
-  //int m2 = inp2.size()/m;
-
-  //cout <<  "Transpose: " << "\n";
-  //vector<int> ansT = tpose(ans, m2);
-
-  //printMat(ansT, m);
-  //printMat(ansT, m, true);
-  //cout << trace(ans, m2) << "\n";
-
 
   return 0;
 }
